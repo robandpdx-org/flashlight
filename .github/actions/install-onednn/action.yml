@@ -1,0 +1,39 @@
+name: install-onednn
+inputs:
+  platform:
+    required: false
+runs:
+  using: composite
+  steps:
+  - name: Install Micromamba
+    run: |-
+      brew install micromamba
+      echo 'export MAMBA_EXE="/opt/homebrew/bin/micromamba"' >> $BASH_ENV
+      echo 'export MAMBA_ROOT_PREFIX="$HOME/micromamba"' >> $BASH_ENV
+      echo '__mamba_setup="$(/opt/homebrew/bin/micromamba shell hook --shell bash)"' >> $BASH_ENV
+      echo 'eval "$__mamba_setup"' >> $BASH_ENV
+    if: "'macos-arm' == ${{ inputs.platform }}"
+    shell: bash
+  - name: Install Micromamba
+    run: |-
+      sudo apt update
+      DEBIAN_FRONTEND=noninteractive sudo apt upgrade # needed for curl not to break
+      curl -L micro.mamba.pm/install.sh | bash
+      echo 'export MAMBA_EXE="$HOME/.local/bin/micromamba"' >> $BASH_ENV
+      echo 'export MAMBA_ROOT_PREFIX="$HOME/micromamba"' >> $BASH_ENV
+      echo '__mamba_setup="$($HOME/.local/bin/micromamba shell hook --shell bash)"' >> $BASH_ENV
+      echo 'eval "$__mamba_setup"' >> $BASH_ENV
+    if: "'linux-arm' == ${{ inputs.platform }}"
+    shell: bash
+  - name: Create micromamba environment for oneDNN
+    run: |-
+      micromamba create -n flashlight -y
+      echo "micromamba activate flashlight" >> $BASH_ENV
+    shell: bash
+  - name: Install oneDNN in env
+    run: micromamba install onednn -c conda-forge -y
+    shell: bash
+  - name: Install compiler toolchains needed with oneDNN
+    run: micromamba install gxx=11 -c conda-forge -y
+    if: "'linux-arm' == ${{ inputs.platform }} || 'linux' == ${{ inputs.platform }}"
+    shell: bash

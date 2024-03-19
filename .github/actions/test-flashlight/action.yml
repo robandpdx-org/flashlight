@@ -1,0 +1,13 @@
+name: test-flashlight
+inputs:
+  path:
+    required: false
+    default: 'OFF'
+runs:
+  using: composite
+  steps:
+  - name: Test Flashlight at ${{ inputs.path }}
+    run: |-
+      cd ${{ inputs.path }}
+      ctest --verbose --parallel 4
+    shell: bash

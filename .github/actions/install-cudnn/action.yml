@@ -1,0 +1,25 @@
+name: install-cudnn
+inputs:
+  platform:
+    required: false
+runs:
+  using: composite
+  steps:
+  - name: Install cuDNN 8.5.0.96 for CUDA 11.7
+    run: |-
+      cd /tmp
+      wget --quiet https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn8_8.5.0.96-1+cuda11.7_amd64.deb
+      wget --quiet https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn8-dev_8.5.0.96-1+cuda11.7_amd64.deb
+      sudo dpkg -i libcudnn8_8.5.0.96-1+cuda11.7_amd64.deb libcudnn8-dev_8.5.0.96-1+cuda11.7_amd64.deb
+    if: "'linux' == ${{ inputs.platform }}"
+    shell: bash
+  - name: Install cuDNN 8.1.1.33 for CUDA 11.2
+    run: |-
+      cd $HOME
+      export CUDNN_ZIP=cudnn-11.2-windows-x64-v8.1.1.33.zip
+      wget --quiet https://developer.download.nvidia.com/compute/redist/cudnn/v8.1.1/$CUDNN_ZIP
+      unzip $CUDNN_ZIP && rm $CUDNN_ZIP
+      cp -r cuda/* "$CUDA_ROOT"
+      rm -rf cuda/
+    if: "'windows' == ${{ inputs.platform }}"
+    shell: bash
