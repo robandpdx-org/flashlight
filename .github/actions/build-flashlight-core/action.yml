@@ -1,0 +1,29 @@
+name: build-flashlight-core
+inputs:
+  platform:
+    required: false
+  backend:
+    required: false
+  autograd_backend:
+    required: false
+  distributed_backend:
+    required: false
+  build_parallelism:
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+  - name: Build Flashlight
+    run: |-
+      cmake -S . -B build \
+        -DFL_USE_ARRAYFIRE=$([ "${{ inputs.backend }}" == "arrayfire" ] && echo "ON" || echo "OFF") \
+        -DFL_ARRAYFIRE_USE_CUDA=$([ "${{ inputs.platform }}" == "windows" ] || [ "${{ inputs.platform }}" == "linux" ] && echo "ON" || echo "OFF") \
+        -DFL_ARRAYFIRE_USE_CPU=$([ "${{ inputs.platform }}" == "macos-arm" ] || [ "${{ inputs.platform }}" == "linux-arm" ] && echo "ON" || echo "OFF") \
+        -DFL_USE_CUDNN=$([ "${{ inputs.autograd_backend }}" == "cudnn" ] && echo "ON" || echo "OFF") \
+        -DFL_USE_ONEDNN=$([ "${{ inputs.backend }}" == "onednn" ] || [ "${{ inputs.autograd_backend }}" == "onednn" ] && echo "ON" || echo "OFF") \
+        -DFL_USE_NCCL=$(([ "${{ inputs.platform }}" == "linux" ] || [ "${{ inputs.platform }}" == "windows" ]) && [ "${{ inputs.distributed_backend }}" == "nccl" ] && echo "ON" || echo "OFF") \
+        -DFL_USE_GLOO=OFF \
+        -DFL_USE_BACKWARD_CPP=ON
+      cmake --build build --parallel ${{ inputs.build_parallelism }}
+    shell: bash
