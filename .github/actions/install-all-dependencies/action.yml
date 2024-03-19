@@ -1,0 +1,39 @@
+name: install-all-dependencies
+inputs:
+  platform:
+    required: false
+  backend:
+    required: false
+  autograd_backend:
+    required: false
+  distributed_backend:
+    required: false
+runs:
+  using: composite
+  steps:
+  - uses: "./.github/actions/install-build-dependencies"
+    with:
+      platform: "${{ inputs.platform }}"
+  - uses: "./.github/actions/setup-cuda"
+    with:
+      platform: "${{ inputs.platform }}"
+  - uses: "./.github/actions/install-arrayfire"
+    if: "'arrayfire' == ${{ inputs.backend }}"
+    with:
+      platform: "${{ inputs.platform }}"
+  - uses: "./.github/actions/install-cudnn"
+    if: "'cudnn' == ${{ inputs.autograd_backend }}"
+    with:
+      platform: "${{ inputs.platform }}"
+  - uses: "./.github/actions/install-mpi"
+    if: "!'' == ${{ inputs.distributed_backend }} || 'Stub' == ${{ inputs.distributed_backend }}"
+    with:
+      platform: "${{ inputs.platform }}"
+  - uses: "./.github/actions/install-nccl"
+    if: "'nccl' == ${{ inputs.distributed_backend }}"
+    with:
+      platform: "${{ inputs.platform }}"
+  - uses: "./.github/actions/install-onednn"
+    if: "'onednn' == ${{ inputs.backend }} || 'onednn' == ${{ inputs.autograd_backend }}"
+    with:
+      platform: "${{ inputs.platform }}"
