@@ -1,0 +1,25 @@
+name: install-mpi
+inputs:
+  platform:
+    required: false
+runs:
+  using: composite
+  steps:
+  - name: Install OpenMPI
+    run: |-
+      sudo apt update
+      sudo apt install -y openmpi-bin libopenmpi-dev
+    if: "'linux' == ${{ inputs.platform }}"
+    shell: bash
+  - name: Install Microsoft MPI
+    run: |-
+      cd $HOME
+      export MS_MPI_SETUP=msmpisetup.exe
+      export MS_MPI_SDK=msmpisdk.msi
+      wget --quiet https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/$MS_MPI_SETUP
+      wget --quiet https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/$MS_MPI_SDK
+      ./msmpisetup.exe -unattend
+      sleep 7 # wait for the installer to finish
+      msiexec //quiet //i msmpisdk.msi
+    if: "'windows' == ${{ inputs.platform }}"
+    shell: bash
