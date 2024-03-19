@@ -1,0 +1,31 @@
+name: setup-cuda
+inputs:
+  platform:
+    required: false
+runs:
+  using: composite
+  steps:
+  - name: Use CUDA 11.4
+    run: sudo update-alternatives --set cuda /usr/local/cuda-11.4
+    if: "'linux' == ${{ inputs.platform }}"
+    shell: bash
+  - uses: "./.github/actions/install-cuda"
+    if: "'windows' == ${{ inputs.platform }}"
+    with:
+      platform: "${{ inputs.platform }}"
+  - name: Remove CUDA 10.1 and copy new MSVC Build Customizations
+    run: |-
+      export _MSVC_BUILDCUST_PATH="/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Microsoft/VC/v160/BuildCustomizations"
+      rm -rf /c/Program\ Files/NVIDIA\ GPU\ Computing\ Toolkit/CUDA/v10.1
+      for ext in props targets xml; do rm "${_MSVC_BUILDCUST_PATH}/CUDA 10.1.${ext}"; done
+      cp /c/Program\ Files/NVIDIA\ GPU\ Computing\ Toolkit/CUDA/v11.5/extras/visual_studio_integration/MSBuildExtensions/* "${_MSVC_BUILDCUST_PATH}"
+    shell: bash.exe
+    if: "'windows' == ${{ inputs.platform }}"
+  - name: Set environment variables for CUDA
+    run: |-
+      echo 'export CUDA_ROOT="/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.5/"' >> $BASH_ENV
+      echo 'export CudaToolkitDir="C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.5"' >> $BASH_ENV
+      echo 'export PATH="/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.5/bin/:${PATH}"' >> "$BASH_ENV"
+      echo 'export CUDA_PATH="/c/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.5"' >> "$BASH_ENV"
+    shell: bash.exe
+    if: "'windows' == ${{ inputs.platform }}"
